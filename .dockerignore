@@ -1,0 +1,35 @@
+# Environment variables / secrets - NEVER bake these into the image
+.env
+
+# Virtual environment
+customer_cat/
+venv/
+env/
+.venv/
+
+# Git
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Generated / local artifacts - these get created fresh inside the container
+saved_models/
+src/artifact/
+catboost_info/
+
+# Jupyter notebooks - not needed for the running app
+notebook/
+.ipynb_checkpoints/
+
+# Editor / OS junk
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docs not needed inside the image
+README.md

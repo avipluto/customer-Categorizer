@@ -200,4 +200,4 @@ async def predictRouteClient(
 if __name__ == "__main__":
     import uvicorn
     print("MONGODB URL:", os.getenv("MONGO_DB_URL"))  
-    uvicorn.run(app, host="127.0.0.1", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8080)
