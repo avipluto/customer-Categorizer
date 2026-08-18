@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer Segmentation — NEXUS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    @keyframes scanline { 0%{transform:translateY(-100%)} 100%{transform:translateY(400%)} }
+    @keyframes blink { 0%,100%{opacity:1} 49%{opacity:1} 50%{opacity:0} 99%{opacity:0} }
+    @keyframes borderflow {
+      0%  { border-color: #5DCAA5; box-shadow: 0 0 12px #5DCAA530; }
+      33% { border-color: #7F77DD; box-shadow: 0 0 12px #7F77DD30; }
+      66% { border-color: #D4537E; box-shadow: 0 0 12px #D4537E30; }
+      100%{ border-color: #5DCAA5; box-shadow: 0 0 12px #5DCAA530; }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #06060e;
+      font-family: 'Courier New', Courier, monospace;
+      color: #e8e8ff;
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .nexus-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      background: #0a0a0f;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #1a1a2e;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: #0d0d18;
+      border-bottom: 1px solid #1a1a2e;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #E24B4A; animation: pulse 2s infinite; }
+    .dot-y { background: #EF9F27; animation: pulse 2s infinite .3s; }
+    .dot-g { background: #5DCAA5; animation: pulse 2s infinite .6s; }
+    .topbar-title { font-size: 11px; color: #5DCAA5; letter-spacing: .15em; margin-left: 10px; }
+    .live-badge {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; color: #5DCAA5; letter-spacing: .1em;
+    }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #5DCAA5; animation: pulse 1s infinite; }
+
+    /* ── HERO ── */
+    .hero {
+      background: #0d0d18;
+      border-bottom: 1px solid #1a1a2e;
+      padding: 1.75rem 1.75rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .scanline {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: #5DCAA5; opacity: .12;
+      animation: scanline 5s linear infinite;
+    }
+    .hero-eyebrow { font-size: 10px; color: #5DCAA5; letter-spacing: .2em; margin-bottom: .5rem; }
+    .hero-title { font-size: 26px; font-weight: 600; color: #e8e8ff; line-height: 1.2; margin-bottom: .3rem; }
+    .hero-title span { color: #5DCAA5; }
+    .hero-sub { font-size: 12px; color: #3a3a5a; letter-spacing: .05em; }
+
+    .progress-row { display: flex; gap: 5px; margin-top: 1.1rem; }
+    .pr-seg { flex: 1; height: 2px; border-radius: 99px; background: #1a1a2e; overflow: hidden; }
+    .pr-fill { height: 100%; border-radius: 99px; background: #5DCAA5; width: 0; transition: width .4s ease; }
+    .pr-fill.done { background: #7F77DD; }
+
+    .counter-row { display: flex; gap: .75rem; margin-top: 1rem; }
+    .counter {
+      background: #0a0a0f; border: 1px solid #1a1a2e;
+      border-radius: 10px; padding: .6rem .9rem;
+      flex: 1; text-align: center;
+    }
+    .counter-n { font-size: 20px; font-weight: 600; color: #7F77DD; }
+    .counter-l { font-size: 10px; color: #3a3a5a; letter-spacing: .08em; margin-top: 2px; }
+
+    /* ── BODY ── */
+    .nexus-body { padding: 1.25rem 1.5rem 2rem; }
+
+    .terminal-line {
+      font-size: 10px; color: #3a3a5a; letter-spacing: .06em;
+      margin-bottom: .75rem; display: flex; align-items: center; gap: 6px;
+    }
+    .terminal-line::before { content: ">"; color: #5DCAA5; }
+    .cursor {
+      display: inline-block; width: 7px; height: 12px;
+      background: #5DCAA5; animation: blink 1s step-end infinite;
+      vertical-align: text-bottom;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      border: 1px solid #1a1a2e;
+      border-radius: 12px;
+      margin-bottom: .85rem;
+      overflow: hidden;
+    }
+    .panel-head {
+      background: #0d0d18;
+      padding: .75rem 1rem;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #1a1a2e;
+    }
+    .ph-num {
+      width: 24px; height: 24px; border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; flex-shrink: 0;
+    }
+    .ph-t { background: #5DCAA520; color: #5DCAA5; border: 1px solid #5DCAA540; }
+    .ph-p { background: #7F77DD20; color: #AFA9EC; border: 1px solid #7F77DD40; }
+    .ph-c { background: #D4537E20; color: #ED93B1; border: 1px solid #D4537E40; }
+    .ph-a { background: #EF9F2720; color: #FAC775; border: 1px solid #EF9F2740; }
+    .ph-title { font-size: 12px; color: #e8e8ff; letter-spacing: .07em; font-weight: 600; }
+    .ph-sub { font-size: 10px; color: #3a3a5a; margin-left: auto; letter-spacing: .07em; }
+
+    .panel-body { background: #0a0a0f; padding: 1rem; }
+
+    /* ── FORM GRID ── */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .65rem; }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 10px; color: #3a3a5a; letter-spacing: .1em; text-transform: uppercase; }
+    .field input, .field select {
+      background: #0d0d18;
+      border: 1px solid #1a1a2e;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #e8e8ff;
+      width: 100%;
+      outline: none;
+      font-family: 'Courier New', monospace;
+      transition: border-color .2s, background .2s;
+    }
+    .field input:focus, .field select:focus {
+      border-color: #5DCAA5;
+      background: #0d1a15;
+    }
+    .field select option { background: #0d0d18; color: #e8e8ff; }
+    .field input::placeholder { color: #2a2a3e; }
+
+    /* ── SPEND CHIPS ── */
+    .spend-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; }
+    .spend-chip {
+      background: #0d0d18;
+      border: 1px solid #1a1a2e;
+      border-radius: 10px;
+      padding: .7rem .85rem;
+      transition: border-color .2s;
+    }
+    .spend-chip:focus-within { border-color: #D4537E; }
+    .spend-chip label {
+      font-size: 10px; color: #3a3a5a;
+      letter-spacing: .1em; text-transform: uppercase;
+      display: block; margin-bottom: 5px;
+    }
+    .spend-chip input {
+      background: transparent; border: none;
+      border-bottom: 1px solid #1a1a2e; border-radius: 0;
+      padding: 3px 0; font-size: 15px; font-weight: 600;
+      color: #ED93B1; width: 100%; outline: none;
+      font-family: 'Courier New', monospace;
+    }
+    .spend-chip input:focus { border-bottom-color: #D4537E; }
+    .spend-chip input::placeholder { color: #2a2a3e; }
+
+    /* ── SUBMIT ── */
+    .submit-btn {
+      width: 100%; padding: 14px;
+      background: #0d1a15;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA5;
+      border-radius: 12px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-top: 1.1rem;
+      letter-spacing: .15em; text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+      animation: borderflow 4s linear infinite;
+      transition: background .2s;
+    }
+    .submit-btn:hover { background: #5DCAA520; }
+    .submit-btn:active { opacity: .8; transform: scale(.99); }
+
+    /* ── RESULT ── */
+    .result-block {
+      margin-top: 1.25rem;
+      border: 1px solid #7F77DD40;
+      border-radius: 12px;
+      background: #0d0d1f;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .result-label { font-size: 10px; color: #3a3a5a; letter-spacing: .15em; text-transform: uppercase; margin-bottom: .4rem; }
+    .result-val { font-size: 36px; font-weight: 700; color: #7F77DD; letter-spacing: .05em; }
+    .result-sub { font-size: 11px; color: #3a3a5a; margin-top: .3rem; letter-spacing: .08em; }
+  </style>
+</head>
+<body>
+
+<div class="nexus-wrap">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="dot dot-r"></div>
+    <div class="dot dot-y"></div>
+    <div class="dot dot-g"></div>
+    <span class="topbar-title">NEXUS — CUSTOMER INTELLIGENCE v2.4</span>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="scanline"></div>
+    <div class="hero-eyebrow">// ML SEGMENTATION ENGINE ACTIVE</div>
+    <div class="hero-title">Customer <span>cluster</span><br>prediction system</div>
+    <div class="hero-sub">Input parameters to run inference &gt; cluster assignment</div>
+    <div class="progress-row">
+      <div class="pr-seg"><div class="pr-fill" id="p1"></div></div>
+      <div class="pr-seg"><div class="pr-fill" id="p2"></div></div>
+      <div class="pr-seg"><div class="pr-fill" id="p3"></div></div>
+      <div class="pr-seg"><div class="pr-fill" id="p4"></div></div>
+    </div>
+    <div class="counter-row">
+      <div class="counter">
+        <div class="counter-n" id="fc">00</div>
+        <div class="counter-l">FIELDS FILLED</div>
+      </div>
+      <div class="counter">
+        <div class="counter-n">22</div>
+        <div class="counter-l">TOTAL PARAMS</div>
+      </div>
+      <div class="counter">
+        <div class="counter-n" id="pct">0%</div>
+        <div class="counter-l">COMPLETENESS</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY / FORM -->
+  <div class="nexus-body">
+    <div class="terminal-line">Initializing profile module...<span class="cursor"></span></div>
+
+    <form action="/" method="post">
+
+      <!-- PANEL 1: Profile -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="ph-num ph-t">01</div>
+          <div class="ph-title">Profile data</div>
+          <div class="ph-sub">DEMOGRAPHICS</div>
+        </div>
+        <div class="panel-body">
+          <div class="g3">
+            <div class="field">
+              <label>Age</label>
+              <input type="number" name="Age" placeholder="35" required class="trackable">
+            </div>
+            <div class="field">
+              <label>Education</label>
+              <select name="Education" required class="trackable">
+                <option value="" disabled selected>—</option>
+                <option value="0">Basic</option>
+                <option value="1">2n Cycle</option>
+                <option value="2">Graduation</option>
+                <option value="3">Master</option>
+                <option value="4">PhD</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Marital status</label>
+              <select name="Marital_Status" required class="trackable">
+                <option value="" disabled selected>—</option>
+                <option value="0">Single</option>
+                <option value="1">Married</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Has kids</label>
+              <select name="Parental_Status" required class="trackable">
+                <option value="" disabled selected>—</option>
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>No. of children</label>
+              <input type="number" name="Children" placeholder="0" required class="trackable">
+            </div>
+            <div class="field">
+              <label>Annual income ($)</label>
+              <input type="number" name="Income" placeholder="60000" required class="trackable">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 2: Engagement -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="ph-num ph-p">02</div>
+          <div class="ph-title">Engagement metrics</div>
+          <div class="ph-sub">TENURE + RECENCY</div>
+        </div>
+        <div class="panel-body">
+          <div class="g3">
+            <div class="field">
+              <label>Days as customer</label>
+              <input type="number" name="Days_as_Customer" placeholder="365" required class="trackable">
+            </div>
+            <div class="field">
+              <label>Days since last buy</label>
+              <input type="number" name="Recency" placeholder="14" required class="trackable">
+            </div>
+            <div class="field">
+              <label>Total spending ($)</label>
+              <input type="number" name="Total_Spending" placeholder="1200" required class="trackable">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 3: Spending -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="ph-num ph-c">03</div>
+          <div class="ph-title">Spending breakdown</div>
+          <div class="ph-sub">LAST 24 MONTHS</div>
+        </div>
+        <div class="panel-body">
+          <div class="spend-grid">
+            <div class="spend-chip">
+              <label>Wines</label>
+              <input type="number" name="Wines" placeholder="0" required class="trackable">
+            </div>
+            <div class="spend-chip">
+              <label>Fruits</label>
+              <input type="number" name="Fruits" placeholder="0" required class="trackable">
+            </div>
+            <div class="spend-chip">
+              <label>Meat</label>
+              <input type="number" name="Meat" placeholder="0" required class="trackable">
+            </div>
+            <div class="spend-chip">
+              <label>Fish</label>
+              <input type="number" step="0.01" name="Fish" placeholder="0" required class="trackable">
+            </div>
+            <div class="spend-chip">
+              <label>Sweets</label>
+              <input type="number" name="Sweets" placeholder="0" required class="trackable">
+            </div>
+            <div class="spend-chip">
+              <label>Gold</label>
+              <input type="number" name="Gold" placeholder="0" required class="trackable">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 4: Channels -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="ph-num ph-a">04</div>
+          <div class="ph-title">Channel behaviour</div>
+          <div class="ph-sub">PURCHASE VECTORS</div>
+        </div>
+        <div class="panel-body">
+          <div class="g3">
+            <div class="field">
+              <label>Web purchases</label>
+              <input type="number" name="Web" placeholder="0" required class="trackable">
+            </div>
+            <div class="field">
+              <label>Catalog purchases</label>
+              <input type="number" name="Catalog" placeholder="0" required class="trackable">
+            </div>
+            <div class="field">
+              <label>In-store purchases</label>
+              <input type="number" name="Store" placeholder="0" required class="trackable">
+            </div>
+            <div class="field">
+              <label>Discount purchases</label>
+              <input type="number" name="Discount_Purchases" placeholder="0" required class="trackable">
+            </div>
+            <div class="field">
+              <label>Promos accepted</label>
+              <input type="number" name="Total_Promo" placeholder="0" required class="trackable">
+            </div>
+            <div class="field">
+              <label>Web visits / month</label>
+              <input type="number" name="NumWebVisitsMonth" placeholder="0" required class="trackable">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn">
+        <i class="ti ti-cpu" style="font-size:17px"></i>
+        Run inference — predict cluster
+      </button>
+
+    </form>
+
+    <!-- RESULT (shown when Flask returns context) -->
+    {% if context is not none %}
+    <div class="result-block">
+      <div class="result-label">// Inference complete — cluster assigned</div>
+      <div class="result-val">CLUSTER {{ context }}</div>
+      <div class="result-sub">Model prediction based on {{ 22 }} input parameters</div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+  const total = 22;
+  function update() {
+    const fields = document.querySelectorAll('.trackable');
+    let filled = 0;
+    fields.forEach(f => {
+      if (f.value.trim() !== '' && f.value !== f.getAttribute('data-default')) filled++;
+    });
+    document.getElementById('fc').textContent = String(filled).padStart(2, '0');
+    const pct = Math.round((filled / total) * 100);
+    document.getElementById('pct').textContent = pct + '%';
+    ['p1','p2','p3','p4'].forEach((id, i) => {
+      const seg = (i + 1) * 25;
+      const fill = document.getElementById(id);
+      if (pct >= seg) { fill.style.width = '100%'; fill.classList.add('done'); }
+      else if (pct > i * 25) { fill.style.width = ((pct - i * 25) / 25 * 100) + '%'; fill.classList.remove('done'); }
+      else { fill.style.width = '0'; fill.classList.remove('done'); }
+    });
+  }
+  document.querySelectorAll('.trackable').forEach(f => f.addEventListener('input', update));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+columns:
+  Age: float64
+  Education: float64
+  Marital Status: float64
+  Parental Status: float64
+  Children: float64
+  Income: float64
+  Total_Spending: float64
+  Days_as_Customer: float64
+  Recency: float64
+  Wines: float64
+  Fruits: float64
+  Meat: float64
+  Fish: float64
+  Sweets: float64
+  Gold: float64
+  Web: float64
+  Catalog: float64
+  Store: float64
+  Discount Purchases: float64
+  Total Promo: float64
+  NumWebVisitsMonth: float64

@@ -1,0 +1,24 @@
+# Environment variables / secrets
+.env
+
+# Virtual environment
+customer_cat/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+app.cpython-311.pyc
+
+# Generated / local artifacts
+saved_models/
+src/artifact/
+catboost_info/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
