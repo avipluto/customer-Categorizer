@@ -3,12 +3,17 @@
 
 # Virtual environment
 customer_cat/
+venv/
+env/
+ENV/
+.venv/
 
 # Python cache
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
 *.pyo
-app.cpython-311.pyc
 
 # Generated / local artifacts
 saved_models/
@@ -18,7 +23,19 @@ catboost_info/
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
 # OS / editor junk
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/
